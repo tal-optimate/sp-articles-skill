@@ -31,6 +31,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import pathlib
 import webbrowser
 
 SITE = "https://s-portal.co.il"
@@ -414,7 +415,7 @@ def cmd_mock(a):
     with open(out, "w", encoding="utf-8") as f:
         f.write(page)
     if not a.no_open:
-        webbrowser.open("file://" + urllib.parse.quote(out))
+        webbrowser.open(pathlib.Path(out).as_uri())  # correct file:// URL on macOS and Windows (C:\...)
     print(json.dumps({"preview_file": out, "problems": problems}, ensure_ascii=False, indent=2))
 
 
@@ -495,6 +496,11 @@ def cmd_verify(a):
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):  # Windows consoles default to a codepage that can't print Hebrew
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("check"); s.set_defaults(fn=cmd_check)
