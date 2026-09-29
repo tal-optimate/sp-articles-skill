@@ -1,0 +1,14 @@
+{
+  "name": "sportal",
+  "description": "Dr. Shawn Portal (s-portal.co.il) tools for Claude Code",
+  "owner": {
+    "name": "Optimate"
+  },
+  "plugins": [
+    {
+      "name": "s-portal-magazine",
+      "source": "./",
+      "description": "Publish articles to the המגזין שלנו magazine on s-portal.co.il"
+    }
+  ]
+}

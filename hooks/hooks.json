@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/save_keys.py\" || python \"${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/save_keys.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
