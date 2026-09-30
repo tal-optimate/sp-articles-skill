@@ -1,17 +1,15 @@
 # sportal: Dr. Shawn Portal tools for Claude Code
 
-A plugin marketplace with three plugins. No keys or passwords are stored in this repository: each person enters
-their own in the plugin's settings form, which keeps them in the computer's secure credential store.
+One plugin, **s-portal-magazine**: publish an article as a new cube in המגזין שלנו on s-portal.co.il (AI cover image,
+preview, publish on approval). It also adds the s-portal **Elementor** and **Cloudways** connections.
 
-| Plugin | What it gives | Asks for |
-|---|---|---|
-| `s-portal-magazine` | Publish an article as a new cube in המגזין שלנו (AI cover image, preview, publish on approval). Installs the two plugins below automatically. | OpenAI API key |
-| `sportal-elementor` | Elementor connection for s-portal.co.il, plus the WordPress login the magazine uses | WordPress user + application password |
-| `sportal-cloudways` | Cloudways connection (clear the site cache, server info) | Cloudways access token |
+It asks for all its keys in one settings form: WordPress user (pre-filled) + application password, OpenAI API key,
+Cloudways access token. **No keys or passwords are stored in this repository**: the form keeps them in the
+computer's secure credential store.
 
 ## Install (Claude Code desktop app)
 1. **+ → Plugins → Add plugin** → add marketplace `tal-optimate/sp-articles-skill`.
-2. Install **s-portal-magazine** (or just the connection you need) and fill in the forms.
+2. Install **s-portal-magazine** and fill in the form.
 3. Quit and reopen Claude Code, then say: *run the magazine skill check*.
 
 Terminal alternative:
@@ -19,7 +17,7 @@ Terminal alternative:
 claude plugin marketplace add tal-optimate/sp-articles-skill
 claude plugin install s-portal-magazine@sportal
 ```
-First use: the skill checks the connections and asks for each missing key, one at a time. Run the same flow any
-time with `/s-portal-magazine:login` (or open a form directly with `/plugin configure <plugin>@sportal`).
+First use: the skill checks the connections and asks for any missing keys. Run the same flow any time with
+`/s-portal-magazine:login`, or open the form directly with `/plugin configure s-portal-magazine@sportal`.
 
 Requires Python 3 (Windows: python.org, tick "Add python.exe to PATH").

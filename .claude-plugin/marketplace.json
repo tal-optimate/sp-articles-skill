@@ -6,17 +6,7 @@
     {
       "name": "s-portal-magazine",
       "source": "./plugins/s-portal-magazine",
-      "description": "Publish articles to the המגזין שלנו magazine on s-portal.co.il (installs the Cloudways and Elementor plugins too)"
-    },
-    {
-      "name": "sportal-elementor",
-      "source": "./plugins/sportal-elementor",
-      "description": "Elementor + WordPress connection for s-portal.co.il"
-    },
-    {
-      "name": "sportal-cloudways",
-      "source": "./plugins/sportal-cloudways",
-      "description": "Cloudways connection (hosting, cache) for s-portal.co.il"
+      "description": "Publish articles to the המגזין שלנו magazine on s-portal.co.il (with the Elementor and Cloudways connections)"
     }
   ]
 }

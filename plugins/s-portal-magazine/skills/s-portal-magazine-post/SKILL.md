@@ -41,7 +41,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_po
 ```
 If WordPress or OpenAI isn't `OK`, or no Cloudways tool is available, **stop and log the user in before anything
 else**: follow `${CLAUDE_PLUGIN_ROOT}/commands/login.md` (the same flow as the `/s-portal-magazine:login` command) —
-ask for each missing key one at a time, each through its `/plugin configure …` form, never in the chat. Then have
+have them enter the missing keys in the plugin's `/plugin configure s-portal-magazine@sportal` form, never in the chat. Then have
 them fully restart Claude Code and re-run `check`. Keep the article they sent; continue with it once `check` passes.
 If Python itself is missing, point them to python.org (Windows: tick "Add python.exe to PATH").
 
@@ -129,5 +129,5 @@ categories without the owner's say-so.
 - New articles not first: JetEngine query 16 must be ordered by date, newest first (set 29.09.2026; was random).
 - OpenAI 401/403: invalid key, no billing, or the org isn't verified for the image model.
 - Cache can't be cleared (no Cloudways tool, or 401): the Cloudways token is missing or was deleted — re-enter it with
-  `/plugin configure sportal-cloudways@sportal` and restart. The tool comes from the `sportal-cloudways` plugin
-  (`mcp__plugin_sportal-cloudways_cloudways__app_purge_cache`) or a separately added `cloudways` server. The article is live anyway; tell the user to ask Tal to clear it.
+  `/plugin configure s-portal-magazine@sportal` and restart. The tool comes from this plugin's `cloudways` server
+  (`mcp__plugin_s-portal-magazine_cloudways__app_purge_cache`) or a separately added `cloudways` server. The article is live anyway; tell the user to ask Tal to clear it.

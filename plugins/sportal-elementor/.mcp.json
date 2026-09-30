@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "elementor": {
-      "type": "http",
-      "url": "https://s-portal.co.il/wp-json/elementor/mcp/",
-      "headersHelper": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/wp_headers.py\" || python \"${CLAUDE_PLUGIN_ROOT}/scripts/wp_headers.py\""
-    }
-  }
-}

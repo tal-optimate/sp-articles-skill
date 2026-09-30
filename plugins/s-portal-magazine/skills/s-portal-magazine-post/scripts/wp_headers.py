@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """headersHelper for the Elementor connection: print the WordPress Basic-auth header as JSON.
 
-Reads the login that save_keys.py stored from the plugin's settings form. Prints {} until that has happened
+Reads the WordPress login that save_keys.py stored from the plugin's settings form. Prints {} until that has happened
 (first start after entering the keys): the connection then fails once and works after a restart or /mcp reconnect.
 """
 import base64
@@ -11,7 +11,7 @@ import os
 
 base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
 headers = {}
-for path in glob.glob(os.path.join(base, "plugins", "data", "*sportal-elementor*", "keys.json")):
+for path in glob.glob(os.path.join(base, "plugins", "data", "*s-portal-magazine*", "keys.json")):
     try:
         with open(path, encoding="utf-8") as f:
             k = json.load(f)
