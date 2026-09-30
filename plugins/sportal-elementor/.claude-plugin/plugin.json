@@ -1,0 +1,24 @@
+{
+  "name": "sportal-elementor",
+  "displayName": "s-portal Elementor",
+  "version": "1.0.0",
+  "description": "Elementor + WordPress connection for s-portal.co.il (edit pages; also the WordPress login used by the magazine skill).",
+  "author": { "name": "Optimate" },
+  "repository": "https://github.com/tal-optimate/sp-articles-skill",
+  "userConfig": {
+    "wp_user": {
+      "type": "string",
+      "title": "WordPress user",
+      "description": "The s-portal.co.il WordPress login",
+      "default": "sportal.digital@gmail.com",
+      "required": true
+    },
+    "wp_app_password": {
+      "type": "string",
+      "title": "WordPress application password",
+      "description": "wp-admin → Users → Profile → Application Passwords (spaces are fine)",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

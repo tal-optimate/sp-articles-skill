@@ -174,15 +174,19 @@ def resolve(fields):
 # ---------------------------------------------------------------- credentials + http
 
 def plugin_keys():
-    """Keys saved by the plugin's settings form (see save_keys.py); empty when installed as a plain skill."""
+    """Keys saved from the plugins' settings forms by their SessionStart hooks: the OpenAI key (this plugin) and
+    the WordPress login (sportal-elementor plugin). Empty when installed as a plain skill."""
     import glob
-    for path in glob.glob(os.path.expanduser("~/.claude/plugins/data/*s-portal-magazine*/keys.json")):
-        try:
-            with open(path, encoding="utf-8") as f:
-                return json.load(f)
-        except (OSError, ValueError):
-            pass
-    return {}
+    base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
+    keys = {}
+    for plugin in ("*s-portal-magazine*", "*sportal-elementor*"):
+        for path in glob.glob(os.path.join(base, "plugins", "data", plugin, "keys.json")):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    keys.update({k: v for k, v in json.load(f).items() if v})
+            except (OSError, ValueError):
+                pass
+    return keys
 
 
 def openai_key():
@@ -318,7 +322,7 @@ def cmd_check(a):
             result["openai"] = "FAILED — HTTP %s (invalid key or no billing?)" % e.code
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if any(not v.startswith("OK") for v in result.values()):
-        print("Setup needed — re-enter the keys in the plugin settings (Configure), then fully restart Claude Code")
+        print("Setup needed — WordPress keys: /plugin configure sportal-elementor@sportal · OpenAI key: /plugin configure s-portal-magazine@sportal · then fully restart Claude Code")
         sys.exit(1)
 
 

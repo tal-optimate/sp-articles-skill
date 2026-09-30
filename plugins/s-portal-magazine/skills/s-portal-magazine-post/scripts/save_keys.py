@@ -7,8 +7,9 @@ so this writes them to keys.json in the plugin's private data folder (owner-read
 import json
 import os
 
-KEYS = ("wp_user", "wp_app_password", "openai_api_key")
-data_dir = os.environ.get("CLAUDE_PLUGIN_DATA") or os.path.expanduser("~/.claude/plugins/data/s-portal-magazine")
+KEYS = ("openai_api_key",)  # the WordPress login comes from the sportal-elementor plugin
+data_dir = os.environ.get("CLAUDE_PLUGIN_DATA") or os.path.join(
+    os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude"), "plugins", "data", "s-portal-magazine-sportal")
 values = {k: os.environ.get("CLAUDE_PLUGIN_OPTION_" + k.upper(), "").strip() for k in KEYS}
 if any(values.values()):
     os.makedirs(data_dir, exist_ok=True)

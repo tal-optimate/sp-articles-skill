@@ -1,14 +1,22 @@
 {
   "name": "sportal",
   "description": "Dr. Shawn Portal (s-portal.co.il) tools for Claude Code",
-  "owner": {
-    "name": "Optimate"
-  },
+  "owner": { "name": "Optimate" },
   "plugins": [
     {
       "name": "s-portal-magazine",
-      "source": "./",
-      "description": "Publish articles to the המגזין שלנו magazine on s-portal.co.il"
+      "source": "./plugins/s-portal-magazine",
+      "description": "Publish articles to the המגזין שלנו magazine on s-portal.co.il (installs the Cloudways and Elementor plugins too)"
+    },
+    {
+      "name": "sportal-elementor",
+      "source": "./plugins/sportal-elementor",
+      "description": "Elementor + WordPress connection for s-portal.co.il"
+    },
+    {
+      "name": "sportal-cloudways",
+      "source": "./plugins/sportal-cloudways",
+      "description": "Cloudways connection (hosting, cache) for s-portal.co.il"
     }
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "name": "s-portal-magazine",
+  "displayName": "s-portal Magazine",
+  "version": "1.1.0",
+  "description": "Publish an article as a new cube in the המגזין שלנו magazine on s-portal.co.il: AI cover image, preview, publish on approval.",
+  "author": { "name": "Optimate" },
+  "repository": "https://github.com/tal-optimate/sp-articles-skill",
+  "dependencies": ["sportal-elementor", "sportal-cloudways"],
+  "userConfig": {
+    "openai_api_key": {
+      "type": "string",
+      "title": "OpenAI API key",
+      "description": "Used to create the cover images (starts with sk-)",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

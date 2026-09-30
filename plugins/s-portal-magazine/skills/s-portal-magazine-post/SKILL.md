@@ -41,9 +41,9 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_po
 ```
 If WordPress or OpenAI isn't `OK`, the keys from the plugin's settings form haven't reached the script yet. In the
 user's language, one step at a time: (1) if they just installed or changed the keys, fully quit and reopen Claude Code
-(the keys are handed over when a session starts); (2) otherwise have them re-enter the keys: `/plugin` → Installed →
-**s-portal-magazine** → Configure (desktop app: **+ → Plugins → Manage plugins**). Never ask them to paste a key into
-the chat. If Python itself is missing, point them to python.org (Windows: tick "Add python.exe to PATH").
+(the keys are handed over when a session starts); (2) otherwise have them re-enter the keys: WordPress →
+`/plugin configure sportal-elementor@sportal`, OpenAI → `/plugin configure s-portal-magazine@sportal` (desktop app:
+**+ → Plugins → Manage plugins**). Never ask them to paste a key into the chat. If Python itself is missing, point them to python.org (Windows: tick "Add python.exe to PATH").
 Don't continue until `check` passes.
 
 ### 1. Collect
@@ -129,5 +129,6 @@ categories without the owner's say-so.
   Post Types, the 8 "המגזין שלנו - …" types must support Title, Editor, Thumbnail, Excerpt, Author (set 29.09.2026).
 - New articles not first: JetEngine query 16 must be ordered by date, newest first (set 29.09.2026; was random).
 - OpenAI 401/403: invalid key, no billing, or the org isn't verified for the image model.
-- Cache can't be cleared (no Cloudways tool, or 401): the Cloudways token in the plugin settings is missing or was
-  deleted — re-enter it via Configure and restart. The article is live anyway; tell the user to ask Tal to clear it.
+- Cache can't be cleared (no Cloudways tool, or 401): the Cloudways token is missing or was deleted — re-enter it with
+  `/plugin configure sportal-cloudways@sportal` and restart. The tool comes from the `sportal-cloudways` plugin
+  (`mcp__plugin_sportal-cloudways_cloudways__app_purge_cache`) or a separately added `cloudways` server. The article is live anyway; tell the user to ask Tal to clear it.
