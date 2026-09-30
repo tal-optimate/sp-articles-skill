@@ -418,9 +418,44 @@ def cmd_mock(a):
     out = os.path.abspath(a.out)
     with open(out, "w", encoding="utf-8") as f:
         f.write(page)
+    article_out, note = site_preview(fields, cats, out)
     if not a.no_open:
-        webbrowser.open(pathlib.Path(out).as_uri())  # correct file:// URL on macOS and Windows (C:\...)
-    print(json.dumps({"preview_file": out, "problems": problems}, ensure_ascii=False, indent=2))
+        for p in (out, article_out):
+            if p:
+                webbrowser.open(pathlib.Path(p).as_uri())  # correct file:// URL on macOS and Windows (C:\...)
+    print(json.dumps({"preview_file": out, "article_preview_file": article_out, "article_preview_note": note,
+                      "problems": problems}, ensure_ascii=False, indent=2))
+
+
+def site_preview(fields, post_type, cube_preview_path):
+    """The full article inside the live site's article page (header, fonts, footer), from a published article of the
+    same type with its title and body swapped for the new ones. Local file only; the site isn't touched."""
+    try:
+        with urllib.request.urlopen("%s/%s?per_page=1&_fields=link" % (API, post_type or "blog-food"), timeout=60) as r:
+            ref = json.loads(r.read().decode())[0]["link"]
+        req = urllib.request.Request(ref, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            page = r.read().decode("utf-8", "replace")
+    except Exception as e:  # network or no published article of this type yet
+        return None, "Couldn't load the site's article page (%s) — only the simple preview was made." % e
+    body = to_blocks(fields["blocks"])
+    body = re.sub(r"<h([23])>", r'<h\1 class="wp-block-heading">', body).replace("<p>", '<p class="wp-block-paragraph">')
+    page = re.sub(r"(?is)<script\b.*?</script>", "", page)  # no site scripts/analytics run from the preview
+    page, n1 = re.subn(r'(?s)(<h1 class="entry-title">).*?(</h1>)',
+                       lambda m: m.group(1) + inline(fields["title"]) + m.group(2), page, count=1)
+    page, n2 = re.subn(r'(?s)(<div class="page-content">).*?(</div>\s*</main>)',
+                       lambda m: m.group(1) + body + m.group(2), page, count=1)
+    if not (n1 and n2):
+        return None, "The site's article layout changed — only the simple preview was made."
+    page = re.sub(r"(?s)<title>.*?</title>", "<title>%s – תצוגה מקדימה</title>" % html.escape(fields["title"]), page, count=1)
+    banner = ('<div style="position:sticky;top:0;z-index:99999;background:#C79F4D;color:#1D1E1B;text-align:center;'
+              'font:600 14px Heebo,Arial,sans-serif;padding:8px">תצוגה מקדימה – הכתבה עוד לא פורסמה באתר</div>')
+    page = re.sub(r"(?i)<head>", '<head><base href="%s/">' % SITE, page, count=1)
+    page = re.sub(r"(?i)(<body[^>]*>)", lambda m: m.group(1) + banner, page, count=1)
+    out = os.path.splitext(cube_preview_path)[0] + "-article.html"
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(page)
+    return out, "Full article in the site's real article page (the live page shows no cover image; the cube does)."
 
 
 def cmd_create(a):

@@ -78,15 +78,24 @@ error in plain words and retry with a gentler prompt once.
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" mock article.txt --images <img1> <img2> --out <scratchpad>/magazine-preview.html
 ```
-This opens a local page showing the cube with each image option and the full article page. Tell the user in
-chat: the title, summary, category, author and publish time you used, and that it's a close mock-up (not the
-live site). Ask them to pick an image and approve, or say what to change. Then **stop and wait**.
+This makes and opens **two local previews** (nothing is created on the site):
+1. `preview_file`: the cube with each image option, so they can pick the cover.
+2. `article_preview_file`: **the full article as it will look on the site**, inside the site's real article page
+   (header, fonts, colours, footer) with a "not published yet" banner. The live article page shows no cover image
+   (the image appears on the magazine cube), so this preview doesn't either.
+
+The full article preview is **required before publishing**: always show it. If `article_preview_file` is null,
+tell the user why (`article_preview_note`) and that only the simple preview is available.
+
+Tell the user in chat: the title, summary, category, author and publish time you used; that the second window is
+the full article as it will appear on the site; and any possible typos (left as written). Ask them to pick an image
+and approve, or say what to change. Then **stop and wait**.
 
 ### 5. Changes
-Apply only what they ask (new image → new prompt and `image` again; different title/summary/category → edit
-`article.txt`), re-run `mock`, and wait again.
+Apply only what they ask (new image → new prompt and `image` again; different title/summary/category/text → edit
+`article.txt`), re-run `mock` (both previews update), and wait again.
 
-### 6. Publish (only after explicit approval — "מאושר", "תפרסם", "publish"…)
+### 6. Publish (only after they've seen the full article preview and approved it explicitly — "מאושר", "תפרסם", "publish"…)
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" create article.txt --image <chosen image>
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" publish <post_id>                 # or: --at "15.10.2026 09:00"
