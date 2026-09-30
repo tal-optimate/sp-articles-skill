@@ -19,6 +19,7 @@ Terminal alternative:
 claude plugin marketplace add tal-optimate/sp-articles-skill
 claude plugin install s-portal-magazine@sportal
 ```
-If a settings form doesn't appear, open it with `/plugin configure <plugin>@sportal`.
+First use: the skill checks the connections and asks for each missing key, one at a time. Run the same flow any
+time with `/s-portal-magazine:login` (or open a form directly with `/plugin configure <plugin>@sportal`).
 
 Requires Python 3 (Windows: python.org, tick "Add python.exe to PATH").

@@ -35,16 +35,15 @@ commands below. On Windows, run it with `python` (or `py`) instead of `python3`.
 
 ## Workflow
 
-### 0. Connections (first use, or when something fails)
+### 0. Connections (always first — the first time the skill is used, and whenever something fails)
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" check
 ```
-If WordPress or OpenAI isn't `OK`, the keys from the plugin's settings form haven't reached the script yet. In the
-user's language, one step at a time: (1) if they just installed or changed the keys, fully quit and reopen Claude Code
-(the keys are handed over when a session starts); (2) otherwise have them re-enter the keys: WordPress →
-`/plugin configure sportal-elementor@sportal`, OpenAI → `/plugin configure s-portal-magazine@sportal` (desktop app:
-**+ → Plugins → Manage plugins**). Never ask them to paste a key into the chat. If Python itself is missing, point them to python.org (Windows: tick "Add python.exe to PATH").
-Don't continue until `check` passes.
+If WordPress or OpenAI isn't `OK`, or no Cloudways tool is available, **stop and log the user in before anything
+else**: follow `${CLAUDE_PLUGIN_ROOT}/commands/login.md` (the same flow as the `/s-portal-magazine:login` command) —
+ask for each missing key one at a time, each through its `/plugin configure …` form, never in the chat. Then have
+them fully restart Claude Code and re-run `check`. Keep the article they sent; continue with it once `check` passes.
+If Python itself is missing, point them to python.org (Windows: tick "Add python.exe to PATH").
 
 ### 1. Collect
 The user sends the article and category (optionally: author, a publish date/time for scheduling). Ask for the
