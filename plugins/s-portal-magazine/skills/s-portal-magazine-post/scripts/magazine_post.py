@@ -65,7 +65,12 @@ HEADER_KEYS = {
     "תקציר": "summary", "summary": "summary", "excerpt": "summary",
     "כותב": "author", "author": "author",
     "פרסום": "publish_at", "publish": "publish_at", "schedule": "publish_at",
+    "כותרת seo": "seo_title", "seo title": "seo_title",
+    "תיאור seo": "meta_description", "meta description": "meta_description",
+    "מילת מפתח": "focus_keyphrase", "keyphrase": "focus_keyphrase",
+    "כתובת": "slug", "slug": "slug",
 }
+YOAST = SITE + "/wp-json/yoast/v1/bulk_editor/update_search"
 
 
 # ---------------------------------------------------------------- parsing
@@ -167,8 +172,39 @@ def resolve(fields):
             problems.append("unknown author %r — known: %s" % (author, ", ".join(AUTHORS)))
     if not fields["blocks"]:
         problems.append("empty article body")
+    for key, label in (("seo_title", "כותרת SEO"), ("meta_description", "תיאור SEO"), ("focus_keyphrase", "מילת מפתח")):
+        if not fields.get(key):
+            problems.append("missing %s (%s) — see the SEO rules in SKILL.md" % (label, key))
     when = parse_when(fields["publish_at"]) if fields.get("publish_at") else None
     return cats, author_id, when, problems
+
+
+def seo_warnings(fields):
+    """Google-guideline checks: shown to Claude and the user, never block publishing."""
+    w = []
+    t, d, k, s = (fields.get(x, "") for x in ("seo_title", "meta_description", "focus_keyphrase", "slug"))
+    if len(t) > 60:
+        w.append("SEO title is %d characters; Google shows about 60" % len(t))
+    if d and not 120 <= len(d) <= 155:
+        w.append("meta description is %d characters; aim for 120–155" % len(d))
+    if k:
+        body = " ".join(fields.get("blocks", [])) + " " + fields.get("title", "")
+        for name, text in (("SEO title", t), ("meta description", d), ("article text", body)):
+            if text and k not in text:
+                w.append("focus keyphrase %r doesn't appear in the %s" % (k, name))
+    if not s:
+        w.append("no short web address (כתובת): WordPress will build a long one from the title")
+    elif len(s.split("-")) > 6:
+        w.append("web address has %d words; keep it to 2–5" % len(s.split("-")))
+    return w
+
+
+def set_seo(post_id, fields):
+    """Write the Yoast focus keyphrase, SEO title and meta description (Yoast's own bulk-editor endpoint)."""
+    item = {"id": post_id, "seo_title": fields.get("seo_title", ""), "meta_description": fields.get("meta_description", ""),
+            "focus_keyphrase": fields.get("focus_keyphrase", "")}
+    res = (call("POST", YOAST, data={"items": [item]}) or {}).get("results") or [{}]
+    return bool(res[0].get("success"))
 
 
 # ---------------------------------------------------------------- credentials + http
@@ -263,6 +299,8 @@ def post_payload(fields, cats, author_id, when):
         p["author"] = author_id
     if when:
         p["date"] = when.strftime("%Y-%m-%dT%H:%M:00")  # site-local time; remembered for `publish`
+    if fields.get("slug"):
+        p["slug"] = fields["slug"]
     return p
 
 
@@ -336,6 +374,11 @@ def cmd_parse(a):
         "publish_at": when.strftime("%d.%m.%Y %H:%M") if when else "on approval (now)",
         "blocks": len(kinds), "block_types": kinds,
         "first_block": fields["blocks"][0][:120] if fields["blocks"] else None,
+        "seo": {"title": fields.get("seo_title"), "title_chars": len(fields.get("seo_title", "")),
+                "meta_description": fields.get("meta_description"),
+                "description_chars": len(fields.get("meta_description", "")),
+                "focus_keyphrase": fields.get("focus_keyphrase"), "slug": fields.get("slug")},
+        "seo_warnings": seo_warnings(fields),
         "problems": problems,
     }, ensure_ascii=False, indent=2))
 
@@ -415,6 +458,15 @@ def cmd_mock(a):
             '<h1 class="page">עמוד הכתבה</h1><div class="article"><img src="%s"><h1>%s</h1>%s</div>'
             '</div></body></html>') % (t, MOCK_CSS, "בחרו תמונה." if len(imgs) > 1 else "",
                                         cubes, imgs[0], t, body)
+    snippet = ('<h1 class="page">איך זה ייראה בגוגל</h1><div style="background:#fff;color:#202124;border-radius:12px;'
+               'padding:18px 22px;max-width:640px;font-family:Arial,sans-serif;direction:rtl;text-align:right">'
+               '<div style="font-size:13px;color:#4d5156">s-portal.co.il › %s › %s</div>'
+               '<div style="font-size:20px;color:#1a0dab;margin:4px 0">%s</div>'
+               '<div style="font-size:14px;line-height:1.55;color:#4d5156">%s</div></div>') % (
+        html.escape(cats or ""), html.escape(fields.get("slug") or "…"),
+        html.escape(fields.get("seo_title", "")[:60] + ("…" if len(fields.get("seo_title", "")) > 60 else "")),
+        html.escape(fields.get("meta_description", "")[:158]))
+    page = page.replace('<h1 class="page">עמוד הכתבה</h1>', snippet + '<h1 class="page">עמוד הכתבה</h1>', 1)
     out = os.path.abspath(a.out)
     with open(out, "w", encoding="utf-8") as f:
         f.write(page)
@@ -473,7 +525,9 @@ def cmd_create(a):
     p = post_payload(fields, cats, author_id, when)
     p.update(status="draft", featured_media=media["id"])
     post = call("POST", "/" + cats, data=p)
-    print(json.dumps({"post_id": post["id"], "post_type": cats, "status": post["status"], "image_id": media["id"],
+    seo_ok = set_seo(post["id"], fields)
+    print(json.dumps({"post_id": post["id"], "post_type": cats, "status": post["status"], "seo_saved": seo_ok,
+                      "slug": urllib.parse.unquote(post.get("slug", "")), "image_id": media["id"],
                       "image_url": media.get("source_url"), **links(post["id"])}, ensure_ascii=False, indent=2))
 
 
@@ -488,7 +542,8 @@ def cmd_update(a):
     if base != cats:
         sys.exit("Article %d is %s but the category needs %s — create a new article instead" % (a.post_id, base, cats))
     post = call("POST", "/%s/%d" % (base, a.post_id), data=p)
-    print(json.dumps({"post_id": post["id"], "status": post["status"], **links(post["id"])},
+    seo_ok = set_seo(post["id"], fields)
+    print(json.dumps({"post_id": post["id"], "status": post["status"], "seo_saved": seo_ok, **links(post["id"])},
                      ensure_ascii=False, indent=2))
 
 
@@ -524,7 +579,8 @@ def visible_ids(url):
 
 def cmd_verify(a):
     base = find_type(a.post_id)
-    post = call("GET", "/%s/%d?_fields=id,status,featured_media,link" % (base, a.post_id))
+    post = call("GET", "/%s/%d?_fields=id,status,featured_media,link,yoast_head_json" % (base, a.post_id))
+    yo = post.get("yoast_head_json") or {}
     fresh, _ = visible_ids(MAGAZINE_URL + "?nocache=%d" % dt.datetime.now().timestamp())
     # Visitors reach the page through differently-encoded URLs, each cached separately.
     lower = MAGAZINE_URL.replace(MAGAZINE_URL[len(SITE) + 1:], MAGAZINE_URL[len(SITE) + 1:].lower())
@@ -533,7 +589,8 @@ def cmd_verify(a):
                       "status": post["status"], "has_cover_image": bool(post.get("featured_media")),
                       "url": post["link"], "position_in_visible_grid": fresh.index(a.post_id) + 1
                       if a.post_id in fresh else None, "visible_grid_first": fresh[:3],
-                      "cached_page_shows_it": a.post_id in cached, "cached_page": hit or "?"},
+                      "cached_page_shows_it": a.post_id in cached, "cached_page": hit or "?",
+                      "google_title": yo.get("title"), "google_description": yo.get("description")},
                      ensure_ascii=False, indent=2))
     if post["status"] != "publish":
         print("Not live yet (status: %s) — it isn't expected on the magazine until it's published." % post["status"])

@@ -31,7 +31,8 @@ commands below. On Windows, run it with `python` (or `py`) instead of `python3`.
 - **Preview, then wait.** Nothing is created on the site until the user approves the preview. Approval for one
   article doesn't carry over to the next.
 - The magazine's category tabs stay as they are (new posts showing in every tab is known and accepted).
-- SEO (Yoast) fields stay empty.
+- **Google SEO is written for every article** (see "SEO" below): focus keyphrase, SEO title, meta description and a
+  short web address. These are the only new words you write; the article's own text is never changed for SEO.
 
 ## Workflow
 
@@ -57,10 +58,33 @@ Save to the scratchpad as `article.txt`, exactly the user's words, in this forma
 תקציר: <opening sentence(s), verbatim>
 כותב: <only if the user named an author>
 פרסום: <DD.MM.YYYY HH:MM — only if scheduling>
+מילת מפתח: <focus keyphrase — see SEO>
+כותרת SEO: <≤60 characters>
+תיאור SEO: <120–155 characters>
+כתובת: <short web address: 2–5 Hebrew words joined with ->
 
 <article body; blank line between paragraphs; "## " subheading, "### " sub-subheading>
 ```
-Check it: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" parse article.txt` — `problems` must be empty.
+Then write the four SEO lines (rules below). Check it: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" parse article.txt` — `problems` must be empty; fix every `seo_warnings` item you can (they're shown to the
+user if any remain).
+
+### SEO (Google)
+
+Write these for Hebrew-speaking searchers in Israel, faithful to the article — no claims it doesn't make, no clickbait.
+- **מילת מפתח (focus keyphrase)**: 2–4 words a person would actually type into Google for this topic (e.g.
+  "מניעת התקף לב", "ממרח שוקולד טחינה", "מרק עוף אסייתי"). It must already appear, word for word, in the article's
+  title or text — you can't add it to the article. Use it in the SEO title, the meta description and the web address.
+- **כותרת SEO (SEO title)**: ≤60 characters including spaces, keyphrase near the start, readable as a headline. Add
+  " | ד״ר שון פורטל" at the end only if it still fits in 60. It can differ from the article's title (which stays as is).
+- **תיאור SEO (meta description)**: 120–155 characters: what the reader gets, with the keyphrase, ending with a soft
+  invitation ("כל הפרטים בכתבה", "המתכון המלא כאן"). For recipes, include a concrete fact from the recipe (e.g.
+  calories per portion). Never the credit line or a byline.
+- **כתובת (web address)**: 2–5 Hebrew words of the keyphrase/topic joined with "-", no dates, no punctuation, no
+  stop words (e.g. `מניעת-התקף-לב`). The category part (`/blog-kitchen/`) is added automatically.
+- The cover image's alt text is the article title (set automatically).
+
+`create`/`update` save the keyphrase, SEO title and description in Yoast and the address as the post's slug, and
+report `seo_saved`; `verify` reports `google_title` and `google_description` as Google will read them.
 
 ### 3. Generate cover images
 Write one English image prompt from the article's main idea, then:
@@ -87,7 +111,10 @@ This makes and opens **two local previews** (nothing is created on the site):
 The full article preview is **required before publishing**: always show it. If `article_preview_file` is null,
 tell the user why (`article_preview_note`) and that only the simple preview is available.
 
-Tell the user in chat: the title, summary, category, author and publish time you used; that the second window is
+The cube preview also shows **how the result will look in Google** (SEO title, address, description).
+
+Tell the user in chat: the title, summary, category, author and publish time you used; the SEO fields (keyphrase,
+SEO title with its length, description with its length, web address) and any remaining `seo_warnings`; that the second window is
 the full article as it will appear on the site; and any possible typos (left as written). Ask them to pick an image
 and approve, or say what to change. Then **stop and wait**.
 
@@ -104,7 +131,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_po
 `publish` uses the `פרסום:` time from `article.txt` if there is one. After publishing, **always purge the site
 cache** with the Cloudways MCP `app_purge_cache` (server `1432214`, app `5348289`) — the page is cached separately per
 URL spelling and visitors otherwise keep seeing the old grid for days. Then run `verify` and report from its output,
-not from assumptions: the article URL, `has_cover_image`, `position_in_visible_grid` (1 = first cube) and
+not from assumptions: the article URL, `google_title` / `google_description`, `has_cover_image`, `position_in_visible_grid` (1 = first cube) and
 `cached_page_shows_it`. The purge is asynchronous: run it only after `publish` returns (not in parallel), and poll
 `operation_status` until it completes before running `verify`. If the article still isn't in the grid or the cached
 page, wait a minute, purge again and re-run before investigating. For a scheduled post, report the time; it appears automatically then (purge the cache after
