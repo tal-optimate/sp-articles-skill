@@ -431,8 +431,15 @@ def site_preview(fields, post_type, cube_preview_path):
     """The full article inside the live site's article page (header, fonts, footer), from a published article of the
     same type with its title and body swapped for the new ones. Local file only; the site isn't touched."""
     try:
-        with urllib.request.urlopen("%s/%s?per_page=1&_fields=link" % (API, post_type or "blog-food"), timeout=60) as r:
-            ref = json.loads(r.read().decode())[0]["link"]
+        ref = None
+        for pt in (post_type, "blog-food"):  # a brand-new category has no article yet: borrow another's page
+            try:
+                with urllib.request.urlopen("%s/%s?per_page=1&_fields=link" % (API, pt), timeout=60) as r:
+                    ref = (json.loads(r.read().decode()) or [{}])[0].get("link")
+            except urllib.error.HTTPError:
+                ref = None
+            if ref:
+                break
         req = urllib.request.Request(ref, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=60) as r:
             page = r.read().decode("utf-8", "replace")
