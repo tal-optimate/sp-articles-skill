@@ -1,7 +1,7 @@
 {
   "name": "s-portal-magazine",
   "displayName": "s-portal Magazine",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Publish an article as a new cube in the המגזין שלנו magazine on s-portal.co.il: AI cover image, previews, Google SEO, publish on approval. Includes the s-portal Elementor and Cloudways connections. Keys live in the OS keychain (bun cli/sportal-auth.js login).",
   "author": {
     "name": "Optimate"

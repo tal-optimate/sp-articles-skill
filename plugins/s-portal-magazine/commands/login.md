@@ -28,11 +28,15 @@ Bun 1.3+ is required (the same as Optimate's Clockify plugin). Have them install
 ## 3. Log in (in their own terminal)
 
 The login asks for hidden input, so it must run in a real terminal (Terminal on Mac, PowerShell on Windows), not
-in this chat. Give them the exact command for their computer:
-- Mac:
-  `bun ~/.claude/plugins/marketplaces/sportal/plugins/s-portal-magazine/cli/sportal-auth.js login`
-- Windows (PowerShell):
-  `bun "$env:USERPROFILE\.claude\plugins\marketplaces\sportal\plugins\s-portal-magazine\cli\sportal-auth.js" login`
+in this chat. Build the command from **this plugin's actual folder**, which depends on how it was installed
+(Claude Code's `/plugin`, the desktop app's Plugins page, …): it is `${CLAUDE_PLUGIN_ROOT}/cli/sportal-auth.js`.
+Show the user the command with that full path written out, in quotes:
+- Mac: `bun "${CLAUDE_PLUGIN_ROOT}/cli/sportal-auth.js" login`
+- Windows (PowerShell): the same, with the path in Windows form (backslashes), e.g.
+  `bun "C:\Users\<name>\…\cli\sportal-auth.js" login`
+If `${CLAUDE_PLUGIN_ROOT}` wasn't filled in above, find the file first (Windows PowerShell:
+`Get-ChildItem $env:USERPROFILE -Recurse -Filter sportal-auth.js -ErrorAction SilentlyContinue | Select -Expand FullName`;
+Mac: `find ~ -name sportal-auth.js 2>/dev/null`) and use the path it prints.
 
 It asks for each key in turn (the WordPress user is pre-filled: Enter keeps `sportal.digital@gmail.com`), checks
 each one against WordPress / OpenAI / Cloudways, and saves only the ones that pass. Pressing Enter on an empty key
