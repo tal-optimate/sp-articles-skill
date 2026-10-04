@@ -20,17 +20,58 @@ const KEYS = {
   cloudways_token: { name: "cloudways-token", env: "CLOUDWAYS_ACCESS_TOKEN" },
 };
 
+// Windows Credential Manager silently truncates long values (~2.5 KB per entry, and Cloudways tokens are long), so
+// values are stored in chunks: "<name>" holds "chunks:N" and "<name>.1" … "<name>.N" hold the pieces.
+const CHUNK = 600;
+const item = (name) => ({ service: SERVICE, name });
+
+async function readRaw(name) {
+  const head = await secrets.get(item(name));
+  if (!head || !head.startsWith("chunks:")) return head;
+  const n = Number(head.slice(7));
+  let out = "";
+  for (let i = 1; i <= n; i++) {
+    const part = await secrets.get(item(`${name}.${i}`));
+    if (part == null) return null;
+    out += part;
+  }
+  return out;
+}
+
 async function load(key) {
   try {
-    const v = await secrets.get({ service: SERVICE, name: KEYS[key].name });
+    const v = await readRaw(KEYS[key].name);
     if (v) return v;
   } catch {
     // no keychain backend (e.g. headless Linux): fall back to the environment
   }
   return (process.env[KEYS[key].env] || "").trim() || null;
 }
-const save = (key, value) => secrets.set({ service: SERVICE, name: KEYS[key].name, value });
-const remove = (key) => secrets.delete({ service: SERVICE, name: KEYS[key].name }).catch(() => false);
+
+async function remove(key) {
+  const name = KEYS[key].name;
+  let removed = false;
+  try {
+    const head = await secrets.get(item(name));
+    if (head && head.startsWith("chunks:")) {
+      for (let i = 1; i <= Number(head.slice(7)); i++) await secrets.delete(item(`${name}.${i}`)).catch(() => {});
+    }
+    removed = await secrets.delete(item(name));
+  } catch {}
+  return removed;
+}
+
+async function save(key, value) {
+  const name = KEYS[key].name;
+  await remove(key);
+  const parts = [];
+  for (let i = 0; i < value.length; i += CHUNK) parts.push(value.slice(i, i + CHUNK));
+  for (let i = 0; i < parts.length; i++) await secrets.set({ ...item(`${name}.${i + 1}`), value: parts[i] });
+  await secrets.set({ ...item(name), value: `chunks:${parts.length}` });
+  if ((await readRaw(name)) !== value) {
+    throw new Error(`the keychain didn't store the ${key.replace(/_/g, " ")} correctly`);
+  }
+}
 
 /** Reads a line from the terminal; hidden unless `visible`. Falls back to plain stdin when piped. */
 async function ask(prompt, { visible = false } = {}) {
