@@ -1,38 +1,10 @@
 {
   "name": "s-portal-magazine",
   "displayName": "s-portal Magazine",
-  "version": "2.2.0",
-  "description": "Publish an article as a new cube in the המגזין שלנו magazine on s-portal.co.il: AI cover image, preview, publish on approval. Includes the s-portal Elementor and Cloudways connections.",
-  "author": { "name": "Optimate" },
-  "repository": "https://github.com/tal-optimate/sp-articles-skill",
-  "userConfig": {
-    "wp_user": {
-      "type": "string",
-      "title": "WordPress user",
-      "description": "The s-portal.co.il WordPress login the articles are published under",
-      "default": "sportal.digital@gmail.com",
-      "required": true
-    },
-    "wp_app_password": {
-      "type": "string",
-      "title": "WordPress application password",
-      "description": "From wp-admin → Users → Profile → Application Passwords (spaces are fine)",
-      "sensitive": true,
-      "required": true
-    },
-    "openai_api_key": {
-      "type": "string",
-      "title": "OpenAI API key",
-      "description": "Used to create the cover images (starts with sk-)",
-      "sensitive": true,
-      "required": true
-    },
-    "cloudways_token": {
-      "type": "string",
-      "title": "Cloudways access token",
-      "description": "Used to clear the site cache after publishing (platform.cloudways.com → API)",
-      "sensitive": true,
-      "required": true
-    }
-  }
+  "version": "3.0.0",
+  "description": "Publish an article as a new cube in the המגזין שלנו magazine on s-portal.co.il: AI cover image, previews, Google SEO, publish on approval. Includes the s-portal Elementor and Cloudways connections. Keys live in the OS keychain (bun cli/sportal-auth.js login).",
+  "author": {
+    "name": "Optimate"
+  },
+  "repository": "https://github.com/tal-optimate/sp-articles-skill"
 }

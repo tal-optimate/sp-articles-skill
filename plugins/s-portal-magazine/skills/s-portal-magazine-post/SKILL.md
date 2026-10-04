@@ -38,13 +38,15 @@ commands below. On Windows, run it with `python` (or `py`) instead of `python3`.
 
 ### 0. Connections (always first — the first time the skill is used, and whenever something fails)
 ```bash
+bun "${CLAUDE_PLUGIN_ROOT}/cli/sportal-auth.js" status
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" check
 ```
-If WordPress or OpenAI isn't `OK`, or no Cloudways tool is available, **stop and log the user in before anything
-else**: follow `${CLAUDE_PLUGIN_ROOT}/commands/login.md` (the same flow as the `/s-portal-magazine:login` command) —
-have them enter the missing keys in the plugin's `/plugin configure s-portal-magazine@sportal` form, never in the chat. Then have
-them fully restart Claude Code and re-run `check`. Keep the article they sent; continue with it once `check` passes.
-If Python itself is missing, point them to python.org (Windows: tick "Add python.exe to PATH").
+The keys live only in the OS keychain, saved by the plugin's login tool. If anything is ✗ / not `OK` (or `bun` is
+missing), **stop and log the user in before anything else**: follow `${CLAUDE_PLUGIN_ROOT}/commands/login.md` (the
+same flow as `/s-portal-magazine:login`) — they run one `bun … login` command in their own terminal, which asks for
+each key hidden, checks it and saves it; never ask for keys in the chat. Then have them restart Claude Code and
+re-run the checks. Keep the article they sent; continue with it once everything passes. If Python itself is missing,
+point them to python.org (Windows: tick "Add python.exe to PATH").
 
 ### 1. Collect
 The user sends the article and category (optionally: author, a publish date/time for scheduling). Ask for the
@@ -164,6 +166,6 @@ categories without the owner's say-so.
   Post Types, the 8 "המגזין שלנו - …" types must support Title, Editor, Thumbnail, Excerpt, Author (set 29.09.2026).
 - New articles not first: JetEngine query 16 must be ordered by date, newest first (set 29.09.2026; was random).
 - OpenAI 401/403: invalid key, no billing, or the org isn't verified for the image model.
-- Cache can't be cleared (no Cloudways tool, or 401): the Cloudways token is missing or was deleted — re-enter it with
-  `/plugin configure s-portal-magazine@sportal` and restart. The tool comes from this plugin's `cloudways` server
+- Cache can't be cleared (no Cloudways tool, or 401): the Cloudways token is missing or was deleted — have them run
+  the login command with `cloudways` (see login.md) and restart. The tool comes from this plugin's `cloudways` server
   (`mcp__plugin_s-portal-magazine_cloudways__app_purge_cache`) or a separately added `cloudways` server. The article is live anyway; tell the user to ask Tal to clear it.

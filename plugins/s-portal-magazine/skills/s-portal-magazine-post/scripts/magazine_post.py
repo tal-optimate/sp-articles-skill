@@ -15,8 +15,8 @@ Credentials (never printed):
   WordPress: env SPORTAL_WP_AUTH ("user:application-password" or "Basic <base64>"), otherwise the
              Authorization header of any MCP server in ~/.claude.json whose URL is on s-portal.co.il.
   OpenAI:    env OPENAI_API_KEY. Image model: env OPENAI_IMAGE_MODEL (default gpt-image-1).
-  Plugin install: both are also read from keys.json, which the plugin's SessionStart hook (save_keys.py)
-             writes from the plugin settings form into ~/.claude/plugins/data/<plugin>/.
+  Plugin install: both are also read from the OS keychain via the plugin's login tool
+             (bun cli/sportal-auth.js login / status / logout).
 Standard library only; works on macOS, Linux and Windows.
 """
 import argparse
@@ -209,20 +209,25 @@ def set_seo(post_id, fields):
 
 # ---------------------------------------------------------------- credentials + http
 
+AUTH_CLI = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+                        "cli", "sportal-auth.js")
+
+
 def plugin_keys():
-    """Keys saved from the plugin's settings form by its SessionStart hook (save_keys.py). Empty when installed
-    as a plain skill."""
-    import glob
-    base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
-    keys = {}
-    for plugin in ("*s-portal-magazine*",):
-        for path in glob.glob(os.path.join(base, "plugins", "data", plugin, "keys.json")):
-            try:
-                with open(path, encoding="utf-8") as f:
-                    keys.update({k: v for k, v in json.load(f).items() if v})
-            except (OSError, ValueError):
-                pass
-    return keys
+    """Keys from the OS keychain, saved by the plugin's login command (`bun cli/sportal-auth.js login`).
+    Empty when installed as a plain skill, or when Bun or the keys are missing."""
+    if not os.path.isfile(AUTH_CLI):
+        return {}
+    import subprocess
+    try:
+        out = subprocess.run(["bun", AUTH_CLI, "export"], capture_output=True, text=True, timeout=30)
+        return json.loads(out.stdout or "{}") if out.returncode == 0 else {}
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return {}
+
+
+def login_hint():
+    return ('bun "%s" login' % AUTH_CLI) if os.path.isfile(AUTH_CLI) else "see references/setup.md"
 
 
 def openai_key():
@@ -257,7 +262,7 @@ def wp_auth():
 def call(method, path, data=None, raw=None, headers=None):
     auth = wp_auth()
     if not auth:
-        sys.exit("No WordPress connection found — re-enter the keys in the plugin settings (Configure), then restart Claude Code")
+        sys.exit("No WordPress connection found — in a terminal run:  " + login_hint())
     url = path if path.startswith("http") else API + path
     h = {"Authorization": auth}
     if headers:
@@ -360,7 +365,7 @@ def cmd_check(a):
             result["openai"] = "FAILED — HTTP %s (invalid key or no billing?)" % e.code
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if any(not v.startswith("OK") for v in result.values()):
-        print("Setup needed — enter the keys with /plugin configure s-portal-magazine@sportal (or /s-portal-magazine:login), then fully restart Claude Code")
+        print("Setup needed — in a terminal run:  " + login_hint() + "  then restart Claude Code")
         sys.exit(1)
 
 
@@ -386,7 +391,7 @@ def cmd_parse(a):
 def cmd_image(a):
     key = openai_key()
     if not key:
-        sys.exit("OPENAI_API_KEY is not set — re-enter it in the plugin settings (Configure), then restart Claude Code")
+        sys.exit("No OpenAI key found — in a terminal run:  " + login_hint())
     model = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
     payload = {"model": model, "prompt": a.prompt, "n": a.n, "size": a.size, "quality": a.quality,
                "output_format": "jpeg"}

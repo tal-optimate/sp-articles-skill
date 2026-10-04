@@ -1,52 +1,53 @@
 ---
-description: Connect the magazine skill — opens the one settings form for the WordPress, OpenAI and Cloudways keys
+description: Connect the magazine skill — log in once in a terminal; the keys are checked and saved in the OS keychain
 ---
 
 # Log in to the s-portal magazine connections
 
-Walk the user through entering the keys the magazine skill needs. Speak in the user's language (Hebrew if they
-write Hebrew) and wait for them between steps.
+The keys (WordPress application password, OpenAI key, Cloudways token) are stored **only in the OS keychain** by the
+plugin's login tool. Speak in the user's language (Hebrew if they write Hebrew) and wait for them between steps.
 
-**Never ask for a key in the chat, and never accept one pasted there.** Keys go only into Claude Code's secure
-settings form, which the user opens with `/plugin configure s-portal-magazine@sportal`. If they paste a key into the chat anyway,
-tell them it is now in the conversation, that they should still enter it in the form, and that it is safer to
-create a new one.
+**Never ask for a key in the chat, and never accept one pasted there.** If they paste one anyway, tell them it is now
+in the conversation, that they should still enter it with the login command, and that it is safer to create a new
+one.
 
 ## 1. Check what's connected
 
-Run the check (on Windows use `python` instead of `python3`):
-
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/magazine_post.py" check
+bun "${CLAUDE_PLUGIN_ROOT}/cli/sportal-auth.js" status
 ```
+Each line shows ✓ or ✗ for WordPress, OpenAI and Cloudways. If the command fails because `bun` isn't found, go to
+step 2 first.
 
-Also check whether a Cloudways tool is available (`app_purge_cache` from this plugin's `cloudways` server,
-or a separately added `cloudways` MCP server).
+## 2. Bun (only if missing)
 
-## 2. Open the settings form
+Bun 1.3+ is required (the same as Optimate's Clockify plugin). Have them install it in a terminal, then open a new one:
+- Mac: `curl -fsSL https://bun.sh/install | bash`
+- Windows (PowerShell): `powershell -c "irm bun.sh/install.ps1 | iex"`
 
-All keys are in one form. If anything is not `OK` (or Cloudways is missing), tell the user which keys are missing
-and give them this one command to type in the chat box:
+## 3. Log in (in their own terminal)
 
-`/plugin configure s-portal-magazine@sportal`
+The login asks for hidden input, so it must run in a real terminal (Terminal on Mac, PowerShell on Windows), not
+in this chat. Give them the exact command for their computer:
+- Mac:
+  `bun ~/.claude/plugins/marketplaces/sportal/plugins/s-portal-magazine/cli/sportal-auth.js login`
+- Windows (PowerShell):
+  `bun "$env:USERPROFILE\.claude\plugins\marketplaces\sportal\plugins\s-portal-magazine\cli\sportal-auth.js" login`
 
-| Field in the form | What to paste |
-|---|---|
-| WordPress user | already filled in (`sportal.digital@gmail.com`), leave it |
-| WordPress application password | the password from Tal (spaces are fine) |
-| OpenAI API key | the key that starts with `sk-` |
-| Cloudways access token | the Cloudways token |
-
-Fields already saved can be left as they are; they only need to fill in what's missing. The keys come from Tal
-(e.g. via Bitwarden Send); don't explain how to create keys unless they ask.
+It asks for each key in turn (the WordPress user is pre-filled: Enter keeps `sportal.digital@gmail.com`), checks
+each one against WordPress / OpenAI / Cloudways, and saves only the ones that pass. Pressing Enter on an empty key
+skips it. To redo one key: add `wordpress`, `openai` or `cloudways` after `login`.
 
 Suggested Hebrew wording:
-„כדי לחבר את החשבונות, הקלידו בתיבת ההודעה: `/plugin configure s-portal-magazine@sportal` ובטופס שנפתח הדביקו את המפתחות שקיבלתם מטל: סיסמת האפליקציה של וורדפרס, מפתח OpenAI (מתחיל ב־sk-) והטוקן של Cloudways. שם המשתמש של וורדפרס כבר ממולא. תכתבו לי כשסיימתם."
+„פתחו את הטרמינל (Terminal), הדביקו את השורה הזו ולחצו Enter: `<the command>`. הוא יבקש את המפתחות שקיבלתם מטל אחד־אחד – ההקלדה מוסתרת, וכל מפתח נבדק לפני שהוא נשמר. כשמופיע „All set" – כתבו לי."
 
-## 3. Restart and confirm
+## 4. Restart and confirm
 
-Once they've saved the form, tell them to **fully quit and reopen Claude Code** — the keys reach the skill
-when a session starts. After they reopen and say so, run the check again. Report plainly:
-- Both `OK` and Cloudways available → "הכל מחובר ✅ — אפשר לשלוח כתבה."
-- Something still failing → have them open the same form and re-enter only that key. A WordPress `401` means the password was
-  pasted wrong or revoked: ask Tal for a new one. An OpenAI failure means a wrong key or no billing credit.
+Have them fully quit and reopen Claude Code (the Cloudways and Elementor connections read the keys when they
+connect). Then run step 1 again and report plainly:
+- All ✓ → "הכל מחובר ✅ — אפשר לשלוח כתבה."
+- A ✗ → give the login command again with just that key (`login wordpress` / `login openai` / `login cloudways`).
+  WordPress "wrong user or application password" → ask Tal for a new one; OpenAI "invalid key" → wrong key or no
+  billing credit.
+
+`status` shows which keys work; `logout` removes all of them from the keychain.

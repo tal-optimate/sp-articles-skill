@@ -3,15 +3,12 @@
     "cloudways": {
       "type": "http",
       "url": "https://mcp.cloudways.com/mcp/",
-      "headers": {
-        "X-Access-Token": "${user_config.cloudways_token}",
-        "X-Mcp-Host": "claude-code"
-      }
+      "headersHelper": "bun \"${CLAUDE_PLUGIN_ROOT}/cli/sportal-auth.js\" headers cloudways"
     },
     "elementor": {
       "type": "http",
       "url": "https://s-portal.co.il/wp-json/elementor/mcp/",
-      "headersHelper": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/wp_headers.py\" || python \"${CLAUDE_PLUGIN_ROOT}/skills/s-portal-magazine-post/scripts/wp_headers.py\""
+      "headersHelper": "bun \"${CLAUDE_PLUGIN_ROOT}/cli/sportal-auth.js\" headers elementor"
     }
   }
 }
